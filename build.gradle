@@ -2,6 +2,8 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.3.60'
 }
 
+apply plugin: 'groovy'
+
 group 'io.github.marad'
 version '1.0-SNAPSHOT'
 
@@ -11,6 +13,15 @@ repositories {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+
+//////    testCompile platform("org.spockframework:spock-bom:2.0-M1-groovy-2.5")
+////    testCompile "org.spockframework:spock-core"
+//    testCompile "org.spockframework:spock-junit4" // you can remove this if your code does not rely on old JUnit 4 rules
+    testCompile(
+            'junit:junit:4.12',
+            'org.codehaus.groovy:groovy-all:2.4.4',
+            'org.spockframework:spock-core:1.0-groovy-2.4'
+    )
 }
 
 compileKotlin {
