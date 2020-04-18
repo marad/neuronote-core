@@ -2,7 +2,7 @@ import infra.MockTimeProvider
 import io.github.marad.neuronote.core.BlockType
 import io.github.marad.neuronote.core.HeaderLevel
 import io.github.marad.neuronote.core.Neuronote
-import io.github.marad.neuronote.infra.InMemoryBlockRepository
+import io.github.marad.neuronote.infra.InMemoryDataStore
 import io.github.marad.neuronote.infra.InMemoryIdGenerator
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -10,14 +10,14 @@ import spock.lang.Unroll
 import java.time.Instant
 
 
-class BlockApi extends Specification {
+class BlockApiSpec extends Specification {
     private InMemoryIdGenerator idGenerator = new InMemoryIdGenerator()
     private MockTimeProvider timeProvider = new MockTimeProvider(Instant.MIN)
 
     @Unroll
     def "should create and save block in the repository"() {
         given:
-            InMemoryBlockRepository blockRepository = new InMemoryBlockRepository()
+            InMemoryDataStore blockRepository = new InMemoryDataStore()
             def api = new Neuronote(idGenerator, timeProvider, blockRepository)
         when:
             def result = func(api)
@@ -37,7 +37,7 @@ class BlockApi extends Specification {
 
     def "should update existing block"() {
         given:
-            InMemoryBlockRepository blockRepository = new InMemoryBlockRepository()
+            InMemoryDataStore blockRepository = new InMemoryDataStore()
             def api = new Neuronote(idGenerator, timeProvider, blockRepository)
             def block = api.createTextBlock("test")
         when:
@@ -49,7 +49,7 @@ class BlockApi extends Specification {
 
     def "should find existing block"() {
         given:
-            InMemoryBlockRepository blockRepository = new InMemoryBlockRepository()
+            InMemoryDataStore blockRepository = new InMemoryDataStore()
             def api = new Neuronote(idGenerator, timeProvider, blockRepository)
             def block = api.createTextBlock("test")
         when:
@@ -60,7 +60,7 @@ class BlockApi extends Specification {
 
     def "should return null for non-existing block"() {
         given:
-            InMemoryBlockRepository blockRepository = new InMemoryBlockRepository()
+            InMemoryDataStore blockRepository = new InMemoryDataStore()
             def api = new Neuronote(idGenerator, timeProvider, blockRepository)
         when:
             def result = api.findBlock(123)

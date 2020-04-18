@@ -7,13 +7,6 @@ enum class BlockType(val requiredProperties: List<String>) {
     TEXT(listOf("value")),
     HEADER(listOf("value", "level")),
     NOTE(listOf("name"))
-//    list,
-//    spoiler,
-//    image,
-//    link,
-//    checkbox,
-//    divider,
-//    code
 }
 
 data class Block (
@@ -40,3 +33,8 @@ data class BlockMissingRequiredProperties(val blockType: BlockType, val missingP
 enum class HeaderLevel {
     H1, H2, H3
 }
+
+data class BreadcrumbEntry(
+    val blockId: Int,
+    val name: String
+)
