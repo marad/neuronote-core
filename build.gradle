@@ -3,6 +3,7 @@ plugins {
 }
 
 apply plugin: 'groovy'
+apply plugin: 'maven'
 
 group 'io.github.marad'
 version '1.0-SNAPSHOT'

@@ -13,10 +13,6 @@ fun main() {
         DefaultUtcTimeProvider(),
         blockRepository
     )
-    println(api.createTextBlock("Hello World"))
-    println(api.createHeaderBlock("My title", HeaderLevel.H1))
-
-    println(blockRepository.listBlocks())
 }
 
 interface IdGenerator {
@@ -30,6 +26,8 @@ interface TimeProvider {
 interface DataStore {
     fun saveBlock(block: Block)
     fun findBlock(blockId: Int): Block?
+    fun getParents(blockId: Int): List<Block>
+    fun isParent(blockId: Int, potentialParent: Int): Boolean
 
     fun prepend(noteId: Int, blockToPrepend: Int)
     fun append(noteId: Int, blockToAppend: Int)
@@ -37,12 +35,17 @@ interface DataStore {
     fun detachBlock(noteId: Int, blockToDetach: Int)
     fun detachBlockFromAll(blockToDetach: Int)
     fun getContent(noteId: Int): List<Block> // wszystkie bloki zadanej notatki
-    fun getParents(noteId: Int): List<Block>
+
 }
 
 data class BlockDoesNotExist(val blockid: Int): RuntimeException("Block $blockid does not exist")
+data class NoteDoesNotExist(val noteId: Int): RuntimeException("Note $noteId does not exist")
 
-class Note(private val block: Block, private val dataStore: DataStore) {
+class Note(private val block: Block,
+           private val dataStore: DataStore,
+           private val idGenerator: IdGenerator,
+           private val timeProvider: TimeProvider
+) {
     val id = block.id
 
     init {
@@ -99,6 +102,31 @@ class Note(private val block: Block, private val dataStore: DataStore) {
         }
         return result
     }
+
+    fun insertTextBlock(text: String, blockUnderWhichToInsert: Int?): Block =
+        createTextBlock(text).also {
+            dataStore.saveBlock(it)
+            dataStore.insertOrMove(id, it.id, blockUnderWhichToInsert)
+        }
+
+    fun appendTextBlock(text: String): Block =
+        createTextBlock(text).also {
+            dataStore.saveBlock(it)
+            dataStore.append(id, it.id)
+        }
+
+    fun findBlock(blockId: Int) = dataStore.findBlock(blockId) ?: throw BlockDoesNotExist(blockId)
+    fun updateBlock(block: Block) = dataStore.saveBlock(block)
+
+    private fun createTextBlock(text: String) =
+        Block(
+            idGenerator.nextId(),
+            null,
+            BlockType.TEXT,
+            timeProvider.now(),
+            timeProvider.now(),
+            mapOf("value" to text)
+        )
 }
 
 class Neuronote(
@@ -108,8 +136,19 @@ class Neuronote(
 ) {
     fun createNote(name: String): Note {
         val noteBlock = createNoteBlock(name)
-        return Note(noteBlock, dataStore)
+        return Note(noteBlock, dataStore, idGenerator, timeProvider)
     }
+
+    // TODO: tests
+    fun findNote(noteId: Int): Note {
+        val block = dataStore.findBlock(noteId)
+        if (block == null || block.type != BlockType.NOTE) {
+            throw NoteDoesNotExist(noteId)
+        } else {
+            return Note(block, dataStore, idGenerator, timeProvider)
+        }
+    }
+
 
     fun createTextBlock(text: String): Block =
         Block(

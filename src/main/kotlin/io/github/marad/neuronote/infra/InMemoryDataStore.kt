@@ -76,11 +76,14 @@ class InMemoryDataStore : DataStore {
             .mapNotNull { blocks[it.blockId] }
     }
 
-    override fun getParents(noteId: Int): List<Block> {
+    override fun getParents(blockId: Int): List<Block> {
         return content.values
-            .filter { it.blockId == noteId }
+            .filter { it.blockId == blockId }
             .map { blocks[it.parentBlockId] ?: error("Block must exist to be attached in note") }
     }
+
+    override fun isParent(blockId: Int, potentialParent: Int): Boolean =
+        content.values.any { it.blockId == blockId && it.parentBlockId == potentialParent }
 
     fun listBlocks(): List<Block> = blocks.values.map { it.copy() }
 

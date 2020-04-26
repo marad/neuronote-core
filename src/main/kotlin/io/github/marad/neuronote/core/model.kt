@@ -6,7 +6,8 @@ import java.time.Instant
 enum class BlockType(val requiredProperties: List<String>) {
     TEXT(listOf("value")),
     HEADER(listOf("value", "level")),
-    NOTE(listOf("name"))
+    NOTE(listOf("name")),
+    NOTE_LINK(listOf("noteId")),
 }
 
 data class Block (
