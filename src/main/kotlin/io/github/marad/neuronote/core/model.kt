@@ -1,41 +1,49 @@
 package io.github.marad.neuronote.core
 
-import java.lang.RuntimeException
 import java.time.Instant
 
-enum class BlockType(val requiredProperties: List<String>) {
-    TEXT(listOf("value")),
-    HEADER(listOf("value", "level")),
-    NOTE(listOf("name")),
-    NOTE_LINK(listOf("noteId")),
-}
+data class BreadcrumbEntry(
+    val blockId: BlockId,
+    val name: String
+)
 
-data class Block (
-    val id: Int,
-    val parentId: Int?,
-    val type: BlockType,
+data class Note(
+    val id: BlockId,
+    val parentId: BlockId?,
     val creationTime: Instant,
     val lastUpdateTime: Instant,
-    val properties: Map<String, String>
-) {
-    init { validate() }
+    val name: String,
+    val content: List<Block>
+)
 
-    private fun validate() {
-        val missingProperties = properties.keys.subtract(type.requiredProperties)
-        if (missingProperties.isNotEmpty()) {
-            throw BlockMissingRequiredProperties(type, missingProperties)
-        }
-    }
+sealed class Block(val type: BlockType) {
+    abstract val id: BlockId
+    abstract val creationTime: Instant
+    abstract val lastUpdateTime: Instant
 }
+data class TextBlock(
+    override val id: BlockId,
+    override val creationTime: Instant,
+    override val lastUpdateTime: Instant,
+    val text: String
+) : Block(BlockType.TEXT)
 
-data class BlockMissingRequiredProperties(val blockType: BlockType, val missingProperties: Set<String>)
-    : RuntimeException("Block of type $blockType has missing properties: $missingProperties")
+data class HeaderBlock(
+    override val id: BlockId,
+    override val creationTime: Instant,
+    override val lastUpdateTime: Instant,
+    val text: String,
+    val level: HeaderLevel
+) : Block(BlockType.HEADER)
+
+data class NoteBlock(
+    override val id: BlockId,
+    val parentId: BlockId?,
+    override val creationTime: Instant,
+    override val lastUpdateTime: Instant,
+    val name: String
+) : Block(BlockType.NOTE)
 
 enum class HeaderLevel {
     H1, H2, H3
 }
-
-data class BreadcrumbEntry(
-    val blockId: Int,
-    val name: String
-)

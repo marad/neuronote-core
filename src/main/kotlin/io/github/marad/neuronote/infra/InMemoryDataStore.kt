@@ -1,17 +1,17 @@
 package io.github.marad.neuronote.infra
 
-import io.github.marad.neuronote.core.Block
+import io.github.marad.neuronote.core.DbBlock
 import io.github.marad.neuronote.core.DataStore
 
 class InMemoryDataStore : DataStore {
-    private val blocks = mutableMapOf<Int, Block>()
+    private val blocks = mutableMapOf<Int, DbBlock>()
     private val content = mutableMapOf<ContentKey, ContentEntry>()
 
-    override fun saveBlock(block: Block) {
+    override fun saveBlock(block: DbBlock) {
         blocks[block.id] = block.copy()
     }
 
-    override fun findBlock(blockId: Int): Block? {
+    override fun findBlock(blockId: Int): DbBlock? {
         return blocks.getOrDefault(blockId, null)
     }
 
@@ -69,14 +69,14 @@ class InMemoryDataStore : DataStore {
             }
     }
 
-    override fun getContent(noteId: Int): List<Block> {
+    override fun getContent(noteId: Int): List<DbBlock> {
         return content.values
             .filter { it.parentBlockId == noteId }
             .sortedBy { it.rank }.also { print(it) }
             .mapNotNull { blocks[it.blockId] }
     }
 
-    override fun getParents(blockId: Int): List<Block> {
+    override fun getParents(blockId: Int): List<DbBlock> {
         return content.values
             .filter { it.blockId == blockId }
             .map { blocks[it.parentBlockId] ?: error("Block must exist to be attached in note") }
@@ -85,7 +85,7 @@ class InMemoryDataStore : DataStore {
     override fun isParent(blockId: Int, potentialParent: Int): Boolean =
         content.values.any { it.blockId == blockId && it.parentBlockId == potentialParent }
 
-    fun listBlocks(): List<Block> = blocks.values.map { it.copy() }
+    fun listBlocks(): List<DbBlock> = blocks.values.map { it.copy() }
 
     private data class ContentKey(val parentBlockId: Int, val blockId: Int)
     private data class ContentEntry(val parentBlockId: Int, val blockId: Int, var rank: Int)
